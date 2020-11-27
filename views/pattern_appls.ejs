@@ -1,0 +1,467 @@
+<% include comment.ejs %>
+
+<style>
+  section#body article {
+    background: #ffd484;
+    padding: 2px;
+		margin: 1px;
+		border-radius: 10px;
+  }
+	section#body table:not(.comment) {
+		width: 100%;
+		margin: 2px 0;
+	}
+	
+	section#body article.pattern > table.main td.main span { font-size: 25px; }
+	section#body article.pattern > table.main td.quiz {
+		width: 1px;
+		text-align: center;
+		display: none;
+	}
+	section#body article.pattern > table.main td.quiz img { height: 25px; }
+	
+	section#body article.pattern > table.info td.comment > img.arrow {
+		height: 7px;
+		margin-left: -3px;
+		/*display: inline-block;*/
+		display: none;
+	}
+	section#body article.pattern > table.info td.quiz { cursor: pointer; }
+	section#body article.pattern > table.info td.quiz > span.count { display: inline-block; }
+	
+	section#body div.comment_body { display: none; }
+	
+  section#body article.application:nth-child(2n) { background: #ffeac4; }
+	section#body article.application > table td.main { cursor: pointer; }
+	section#body article.application > table td.main > div.source >  span.answer {
+		color: orangered;
+		font-weight: bold;
+		cursor: pointer;
+	}
+	section#body article.application > table td.comment { width: 1px; }
+	section#body article.application > table td.comment > div {
+		float: right;
+		font-size: 10px; /* important */
+		text-align: center;
+		display: none;
+	}
+	section#body article.application > table td.comment img {
+		height: 25px;
+		vertical-align: middle;
+	}
+	section#body article.application > table td.comment span.count {
+		font-size: 12px;
+		color: dimgray;
+		margin-left: -2px;
+	}
+	
+	section#body div#guide {
+		margin: 0 auto;
+		font-size: 25px;
+		text-align: center;
+		color: dimgray;
+	}
+	@media screen and (max-width: 350px) {
+		section#body div#guide { font-size: 20px; }
+  }
+</style>
+
+<script>
+	var auth = false;
+	var login = false;
+	var copy = false;
+  $(document).ready(function() {
+		auth = isAuthorized();
+		login = isLogined();
+		copy = ($('section#body br#copy_hint').attr('value') == 'true');
+		
+		showPttnCommentCount();
+		
+		if(login && copy) {
+			if(auth)
+				loadQuizCount();
+			else
+				checkLinking();
+		}
+		
+		loadApplCommentCount();
+		
+		var arrowNode = getPttnNode('> table.info td.comment > img.arrow');
+		if($.cookie('comments_open') == 1) {
+			$('section#body div.comment_body').css('display', 'block');
+			arrowNode.attr('src','/images/Arrow_Up.png');
+		} else {
+			arrowNode.attr('src','/images/Arrow_Down.png');
+		}
+		arrowNode.css('display','inline-block');
+		
+		bindTextareaEvent();
+		
+		initMenu();
+	});
+	
+	function showPttnCommentCount() {
+		var countNode = getCommentCountNode();
+		var count = parseInt(countNode.text());
+		if(count > 0)
+			$(countNode).css('display', 'inline-block');
+	}
+	
+	function loadQuizCount() {
+		$.ajax({
+			url: getCleanUrl() + '/quiz_count_load',
+			type: 'POST',
+			success: function(data) {
+				getQuizCountNode().text(data.quiz_count);
+			}
+		});
+	}
+	
+	function checkLinking() {
+		$.ajax({
+			url: getCleanUrl() + '/linking_check',
+			type: 'POST',
+			success: function(data) {
+				if(data == 'true') {
+					getPttnNode('> table.main td.quiz').css('display','table-cell');
+				} else if(data == 'false') {
+					var copyMenuItem = addSubMenuItemAtFirst('복사');
+					copyMenuItem.on('click', clickMenuCopyButton);
+				}
+			}
+		});
+	}
+	
+	function loadApplCommentCount() {
+		var appls_id = [];
+		$('section#body article.application').each(function(index, item) {
+			appls_id.push($(item).attr('id'));
+		});
+		
+		if(appls_id.length > 0) {
+			jQuery.ajaxSettings.traditional = true;
+			$.ajax({
+				url: getCleanUrl() + '/appl_comment_count_load',
+				type: 'POST',
+				data: { appls_id: appls_id },
+				success: function(data) {
+					data.forEach(function(item) {
+						var divNode = $('section#body article.application#'+item.appl_id+' > table td.comment > div');
+						divNode.css('display', 'block');
+						var spanNode = divNode.find('> span.count');
+						spanNode.text(item.cmnt_count);
+					});
+				}
+			});
+		}
+	}
+	
+	function bindTextareaEvent() {
+		getCommentTextarea().on({
+			focus: function(event) {
+				$(this).attr('rows', 3);
+			},
+			blur: function(event) {
+				if($(this).val().length == 0)
+				$(this).attr('rows', 1);
+			}
+		});
+	}
+	
+	function initMenu() {
+		if(auth) {
+			addSubMenuItem('예문 추가').on('click', function() {
+				document.location = getCleanUrl() + '/add'; 
+				hideSubMenuPanel();
+			});
+			addSubMenuItem('수정').on('click', function() {
+				document.location = getCleanUrl() + '/modify'; 
+				hideSubMenuPanel();
+			});
+			addSubMenuItem('패턴 삭제').on('click', clickMenuDeleteButton);
+		}
+		
+		if(!login || !copy) {
+			addSubMenuItem('복사').on('click', clickMenuCopyButton);
+		}
+		
+		addSubMenuItem('패턴 목록').on('click', function() {
+			document.location = cutBack('pttn'); 
+			hideSubMenuPanel();
+		});
+		addSubMenuItem('언어 목록').on('click', function() {
+			document.location = cutBack('lang'); 
+			hideSubMenuPanel();
+		});
+		
+		bindMousedownEvent();
+		
+		$(window).unload(function() {
+			hideSubMenuPanel();
+		});
+	}
+	
+	function getPttnNode(tag) {
+		return $('section#body article.pattern').find(tag);
+	}
+	
+	function getApplNode(appl_id, tag) {
+		return $('section#body article.application#'+appl_id).find(tag);
+	}
+	
+	function getQuizCountNode() {
+		return getPttnNode('> table.info td.quiz > span.count');
+	}
+	
+	function getCommentCountNode() {
+		return getPttnNode('> table.info td.comment > span.count');
+	}
+	
+	function getCommentBodyNode(tag) {
+		return $('section#body div.comment_body').find(tag);
+	}
+	
+	function getCommentTextarea() {
+		return getCommentBodyNode('textarea');
+	}
+	
+	function getCommentsDiv() {
+		return getCommentBodyNode('> div.comments');
+	}
+	
+	function getComment(cmnt_id) {
+		return getCommentsDiv().find('> table.comment#'+cmnt_id);
+	}
+	
+	function clickApplication(appl_id) {
+		document.location = getCleanUrl() + '/appl/'+appl_id;
+	}
+	
+	function clickSourceUserName(appl_id) {
+		var node = getApplNode(appl_id, 'div.source');
+		var user_id = node.attr('src_user_id');
+		var lang_code = getLanguage();
+		var pttn_id = node.attr('src_pttn_id');
+		var src_id = node.attr('src_id');
+		document.location = location.origin + '/user/'+user_id + '/lang/'+lang_code + '/pttn/'+pttn_id + '/appl/'+src_id;
+	}
+	
+	function clickAllAnswers(src_appl_id) {
+		document.location = location.origin + '/all_answers/'+src_appl_id;
+	}
+	
+	function clickCommentButton() {
+		if(!login) {
+			$.cookie('urlBeforeLogin', getCleanPath(), { path: '/' });
+			document.location = location.origin + '/login';	
+		} else {
+			var commentBody = $('section#body div.comment_body');
+			var arrowNode = getPttnNode('> table.info td.comment > img.arrow');
+			if(commentBody.css('display') == 'block') {
+				$.cookie('comments_open', 0, { path: '/' });
+				commentBody.css('display', 'none');
+				arrowNode.attr('src','/images/Arrow_Down.png');
+			} else {
+				$.cookie('comments_open', 1, { path: '/' });
+				commentBody.css('display', 'block');
+				arrowNode.attr('src','/images/Arrow_Up.png');
+			}
+		}
+	}
+	
+	function clickQuizButton() {
+		document.location = getCleanUrl() + '/quiz';
+		hideSubMenuPanel();
+	}
+	
+	function clickMenuDeleteButton() {
+		hideSubMenuPanel();
+		
+		if(confirm('정말로 삭제합니까?')) {
+			var oriHeaderName = setHeaderName('삭제 중..'); // A
+			$.ajax({
+				url: getCleanUrl() + '/delete',
+				type: 'POST',
+				success: function(data) {
+					setHeaderName(oriHeaderName); // B
+					document.location = cutBack('pttn'); 
+				},
+				error: function(err) {
+					setHeaderName(oriHeaderName); // B
+				}
+			});	
+		}
+	}
+	
+	function clickMenuCopyButton() {
+		hideSubMenuPanel();
+		
+		if(!login) {
+			$.cookie('urlBeforeLogin', getCleanPath(), { path: '/' });
+			document.location = location.origin + '/login'; 
+			hideSubMenuPanel();
+			return;
+		}
+		
+		var oriHeaderName = setHeaderName('복사 중..'); // A-1
+		hideSubMenuButton(); // A-2
+		$.ajax({
+			url: getCleanUrl() + '/copy',
+			type: 'POST',
+			data: {
+				text: getPttnNode('td.main > span.text').text(),
+				mean: getPttnNode('td.main > span.mean').text() 
+			},
+			success: function(data) {
+				setHeaderName(oriHeaderName); // B-1
+				showSubMenuButton(); // B-2
+				if(data.result == 'success') {
+					if(confirm('복사가 완료되었습니다. 홈으로가서 확인하겠습니까?')) {
+						document.location = location.origin + '/user/'+data.user_id + '/lang/'+data.lang_code + '/pttn/'+data.copied_id;
+					}
+				}
+				/*
+				else if(data.result == 'mine') {
+					setHeaderName(prevName);
+					alert('it\'s from you.');
+				}
+				else if(data.result == 'already') {
+					setHeaderName(prevName);
+					alert('already copied.');
+				}
+				*/
+			},
+			error: function() {
+				setHeaderName(oriHeaderName); // B-1
+				showSubMenuButton(); // B-2
+			}
+		});
+	}
+</script>
+
+<article class="pattern">
+	<table class="main">
+		<tr>
+			<td class="main">
+				<span class="text"><%= pttn.text %></span>
+				<br/>
+				<span class="mean"><%= pttn.mean %></span>
+			</td>
+			<td class="quiz">
+				<img src="/images/Quiz.png"/>
+			</td>
+		</tr>
+	</table>
+	<table class="info">
+		<tr>
+			<td class="dummy">&nbsp;&nbsp;</td>
+			<td class="comment" onclick="clickCommentButton()">
+				<img src="/images/Comment_White.png"/>
+				<span class="count"><%= pttn.comments.length %></span>
+				<img class="arrow" src="/images/Arrow_Down.png"/>
+			</td>
+			<% if(auth && copy) { %>
+				<td class="dummy">&nbsp;&nbsp;</td>
+				<td class="quiz" onclick="clickQuizButton()">
+					<img src="/images/Quiz_White.png"/>
+					<span class="count"></span>
+				</td>
+			<% } %>
+		</tr>
+	</table>
+</article>
+<div class="comment_body">
+	<% if(login) { %>
+		<table class="input">
+			<tr>
+				<td class="textarea">
+					<textarea placeholder="메모/댓글" rows="1" maxlength="500"></textarea>
+				</td>
+				<td class="add">
+					<span class="button" onclick="clickAddCommentButton()">추가</span>
+				</td>
+			</tr>
+		</table>
+	<% } %>
+	<div class="comments">
+	<% for(var i in pttn.comments) { %>
+		<table class="comment" id="<%= pttn.comments[i].cmnt_id %>">
+			<tr>
+				<td class="contents">
+					<span class="name" onclick="<%- "clickCommentWriter(" + "'" + pttn.comments[i].writer_id + "')" %>"><%= pttn.comments[i].name %>:</span>
+					<span class="text"><%= pttn.comments[i].text %></span>
+				</td>
+				<% if(auth || pttn.comments[i].writer_id == id) { %>
+					<td class="x">
+							<span class="button" onclick="clickDeleteCommentButton(<%= pttn.comments[i].cmnt_id %>)">x</span>
+					</td>
+				<% } %>
+			</tr>
+		</table>
+	<% } %>
+	</div>
+</div>
+<br/>
+<div class="applications">
+<% for(var i in appls) { %>
+	<% var appl = appls[i] %>
+	<article class="application" id="<%= appl.id %>">
+		<table>
+			<tr>
+				<td class="main">
+					<% if(copy && appl.quiz == 1) { %>
+						<% if(appl.src_exist) { %>
+							<div class="source" src_id="<%= appl.src_id %>" src_user_id="<%= appl.src_user_id %>" src_pttn_id="<%= appl.src_pttn_id %>">
+								┌ 
+								<span class="answer" onclick="clickSourceUserName(<%= appl.id %>)">
+									<%= appl.src_user_name %>(답)
+								</span>
+								&nbsp;&nbsp;&nbsp;&nbsp;
+								<span class="answer" onclick="clickAllAnswers(<%= appl.src_id %>)">
+									모두의 답
+							  </span>
+							</div>
+						<% } %>
+						<div class="main" onclick="clickApplication(<%= appl.id %>)">
+							Q: <%= appl.mean %>
+							<br/>
+							A: <%= appl.text %>
+						</div>
+					<% } else { %>
+						<div class="main" onclick="clickApplication(<%= appl.id %>)">
+							<%= appl.text %>
+							<br/>
+							<%= appl.mean %>
+						</div>
+					<% } %>
+				</td>
+				<td class="comment">
+					<div>
+						<img src="/images/Comment.png"/>
+						<span class="count"></span>
+					</div>
+				</td>
+			</tr>
+		</table>
+	</article>
+<% } %>
+</div>
+<% if(appls.length == 0) { %>
+	<br/>
+	<% if(auth) { %>
+		<div id="guide">
+			예문을 추가하세요. ↓<br/>
+			메뉴(≡)에서 '예문 추가'를 클릭<br/>
+			<% if(copy) { %>
+				혹은 퀴즈(Q) 버튼 클릭
+			<% } %>
+		</div>
+	<% } else { %>
+	  <div id="guide">예문이 없습니다.</div>
+	<% } %>
+<% } %>
+<br id="auth_hint" class="hint" value="<%= auth %>"/>
+<br id="login_hint" class="hint" value="<%= login %>"/>
+<br id="copy_hint" class="hint" value="<%= copy %>"/>
+
+<% include footer.ejs %>

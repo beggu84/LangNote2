@@ -1,0 +1,117 @@
+<% include header.ejs %>
+
+<link href="/stylesheets/pattern_input.css" type="text/css" rel="stylesheet">
+
+<style>
+	section#body article.application {
+		background: #ffd484;
+		padding: 2px;
+		margin: 1px;
+	}
+</style>
+
+<script>
+  $(document).ready(function() {
+		readOriginalData();
+		
+		initMenu();
+		
+		setSubMenuConfirmMode();
+	});
+	
+	function initMenu() {
+		bindMousedownEvent();
+		
+		$(window).unload(function() {
+			hideSubMenuPanel();
+		});
+	}
+	
+	var oriAppl = {};
+	function readOriginalData() {
+		oriAppl.text = $('section#body input[name=appl_text]').val();
+		oriAppl.mean = $('section#body input[name=appl_mean]').val();
+	}
+	
+	function okayApplication() {
+		if(!checkApplicationValue())
+			return;
+			
+		var appl_text = $('section#body input[name=appl_text]').val();
+		var appl_mean = $('section#body input[name=appl_mean]').val();
+		if(appl_text == oriAppl.text && appl_mean == oriAppl.mean) {
+			cancelApplication();
+			return;
+		}
+		
+		$('section#body form').trigger('submit');
+	}
+	
+	function checkApplicationValue() {
+		var textLen = $('section#body input[name=appl_text]').val().length;
+		var meanLen = $('section#body input[name=appl_mean]').val().length;
+		if(textLen == 0 || meanLen == 0) {
+			alert('예문과 뜻을 모두 입력하세요.');
+			return false;
+		}
+		return true;
+	}
+	
+	function clickApplicationOkayButton() {
+		okayApplication();
+	}
+	
+	function clickApplicationCancelButton() {
+		cancelApplication();
+	}
+	
+	function clickMenuOkayButton() {
+		okayApplication();
+	}
+	
+	function clickMenuCancelButton() {
+		cancelApplication();
+	}
+	
+	function cancelApplication() {
+		document.location = cutBack('modify');
+	}
+</script>
+
+<form method="post">
+	<article class="application">
+		<% if(appl.quiz == 1) { %>
+			　퀴즈
+		<% } else {%>
+			　예문
+		<% } %>
+		<table class="main">
+			<tr>
+				<td class="main">
+					<% if(appl.quiz == 1) { %>
+						<input type="text" name="appl_mean" placeholder="퀴즈" maxlength="100" value="<%= appl.mean %>" display="none"/>
+						<%= appl.mean %>
+						<br/>
+						<input type="text" name="appl_text" placeholder="답" maxlength="100" value="<%= appl.text %>"/>
+					<% } else {%>
+						<input type="text" name="appl_text" placeholder="예문" maxlength="100" value="<%= appl.text %>"/>
+						<br/>
+						<input type="text" name="appl_mean" placeholder="뜻" maxlength="100" value="<%= appl.mean %>"/>
+					<% } %>
+				</td>
+			</tr>
+		</table>
+	</article>
+</form>
+<table id="buttons">
+	<tr>
+		<td class="okay">
+			<span id="okay" onclick="clickApplicationOkayButton()">확인</span>
+		</td>
+		<td class="cancel">
+			<span id="cancel" onclick="clickApplicationCancelButton()">취소</span>
+		</td>
+	</tr>
+</table>
+
+<% include footer.ejs %>

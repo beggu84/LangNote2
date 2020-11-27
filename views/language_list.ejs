@@ -1,0 +1,226 @@
+<% include header.ejs %>
+
+<style>
+	section#body article td.lang { font-size: 30px; }
+  @media screen and (max-width: 400px) {
+		section#body article td.lang { font-size: 25px; }
+  }
+  @media screen and (min-width: 401px) and (max-width: 959px) {
+		section#body article td.lang { font-size: 30px; }
+  }
+  @media screen and (min-width: 960px) {
+		section#body article td.lang { font-size: 30px; }
+  }
+	
+	section#body article {
+		height: 40px;
+		padding: 2px;
+		margin: 1px;
+		background: #ffd484;
+		border-radius: 10px;
+	}
+  section#body article:nth-child(2n) { background: #ffeac4; }
+	
+	section#body article table { width: 100%; }
+	section#body article td.checkbox {
+		width: 20px;
+		display: none;
+	}
+	section#body article td.checkbox > input { margin: 5px; }
+	section#body article td.lang {
+    word-break: break-all;
+    cursor: pointer;
+  }
+	section#body article div.pttn_count {
+		float: right;
+		line-height: 36px;
+		color: dimgray;
+	}
+	section#body article div.pttn_count img {
+		height: 25px;
+		vertical-align: middle;
+		margin-bottom: 4px;
+	}
+	section#body article div.pttn_count img { margin-right: -4px; }
+	section#body article div.pttn_count img.unripe { margin-right: -5px; }
+	section#body article div.pttn_count span.unripe { font-size: 16px; }
+	
+	section#body div#guide {
+		margin: 0 auto;
+		font-size: 25px;
+		text-align: center;
+		color: dimgray;
+	}
+	
+	section#body form {
+		width: 250px;
+		margin: 0 auto;
+	}
+	section#body select {
+		width: 100%;
+		margin: 2px;
+		font-size: 25px;
+	}
+	section#body div.button {
+		width: 100%;
+		margin: 0 auto;
+		height: 35px;
+		line-height: 35px;
+		padding: 2px;
+		background: orange;
+		color: white;
+		text-align: center;
+		font-size: 25px;
+	}
+</style>
+
+<script>
+	var auth = false;
+	var login = false;
+  $(document).ready(function() {
+		auth = isAuthorized();
+		login = isLogined();
+		
+		initMenu();
+  });
+	
+	function initMenu() {
+		if(auth) {
+			addSubMenuItem('삭제').on('click', function() {
+				setSubMenuConfirmMode();
+				$('nav#right_menu_nav > span#okay').attr('onclick', 'clickMenuOkayButton("delete")');
+        $('section#body td.checkbox').css('display', 'table-cell');
+			});
+		}
+			
+		bindMousedownEvent();
+		
+		$(window).unload(function(){
+			cancelMenu();
+		});
+	}
+	
+	function clickLanguage(code) {
+		if(isSubMenuMenuMode()) {
+			var checkbox = $('section#body :checkbox#'+code);
+			if(checkbox.prop('checked'))
+				checkbox.prop('checked', false);
+			else
+			  checkbox.prop('checked', true);
+			return;
+		}
+		
+		document.location = getCleanUrl() + '/lang/'+code;
+	}
+	
+	function clickAddLanguageButton() {
+		if(isSubMenuMenuMode())
+			return;
+			
+		var selelctVal = $('section#body form > select').val(); 
+		if(!selelctVal) {
+			alert('언어를 선택하세요.');
+			return;
+		}
+
+		//--- depend on page update ---
+		setHeaderName('추가 중..');
+		$('section#body form > div.button').css('visibility', 'hidden');
+		//-----------------------------
+		$('section#body form').trigger('submit');
+	}
+  
+  function clickMenuOkayButton(id) {
+		if(id == 'delete') {
+			var checkedBoxes = $('section#body :checked');
+			if(checkedBoxes.length > 0) {
+				if(confirm('정말로 삭제합니까?')) {
+					var langs_code = [];
+					checkedBoxes.each(function(index, item) {
+						langs_code.push($(item).attr('id'));
+					});
+					
+					var oriHeaderName = setHeaderName('삭제 중..'); // A
+					//-----------------------------
+					jQuery.ajaxSettings.traditional = true;
+					$.ajax({
+						url: getCleanUrl() + '/lang_delete',
+						type: 'POST',
+						data: { langs_code: langs_code },
+						success: function(data) {
+							setHeaderName(oriHeaderName); // B
+							location.reload();
+						},
+						error: function(err) {
+							setHeaderName(oriHeaderName); // B
+						}
+					});
+				}
+			}
+			
+			cancelMenu(); // for cancel
+		}
+  }
+  
+  function clickMenuCancelButton() {
+		cancelMenu();
+  }
+	
+	function cancelMenu() {
+		setSubMenuMenuMode();
+    $('section#body td.checkbox').css('display', 'none');
+	}
+</script>
+
+<% var existRegLang = false; %>
+<% for(var i in langs) { %>
+	<% if(langs[i].registered)  { %>
+		<% existRegLang = true; %>
+		<article>
+			<table>
+				<tr>
+					<td class="checkbox">
+						<input type="checkbox" id="<%= langs[i].code %>"/>
+					</td>
+					<td class="lang" onclick="<%- "clickLanguage(" + "'" + langs[i].code + "')" %>"><%= langs[i].name %></td>
+					<td>
+						<div class="pttn_count">
+							<% if(langs[i].ripe_pttn_count > 0) { %>
+								<img class="ripe" src="/images/RipeOrange.png"/>
+								<span class="ripe"><%= langs[i].ripe_pttn_count %></span>
+							<% } %>
+							<% if(langs[i].unripe_pttn_count > 0) { %>
+								<img class="unripe" src="/images/UnripeOrange.png"/>
+								<span class="unripe"><%= langs[i].unripe_pttn_count %></span>
+							<% } %>
+						</div>
+					</td>
+				</tr>
+			</table>
+		</article>
+	<% } %>
+<% } %>
+<br/>
+<% if(!existRegLang) { %>
+	<br/>
+	<% if(auth) { %>
+		<div id="guide">언어를 추가하세요. ↓</div>
+	<% } else { %>
+	  <div id="guide">등록된 언어가 없습니다.</div>
+	<% } %>
+<% } %>
+<form method="post" auth="<%= auth %>">
+	<br/>
+	<select name="language">
+	<% for(var i in langs) { %>
+		<% if(!langs[i].registered) { %>
+			<option value="<%= langs[i].code %>"><%= langs[i].name %></option>
+		<% } %>
+	<% } %>
+	</select>
+	<div class="button" onclick="clickAddLanguageButton()"/>언어 추가</div>
+</form>
+<br id="auth_hint" class="hint" value="<%= auth %>"/>
+<br id="login_hint" class="hint" value="<%= login %>"/>
+
+<% include footer.ejs %>

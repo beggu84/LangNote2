@@ -1,0 +1,217 @@
+<% include base.ejs %>
+
+<style>
+	section#body table#buttons td.okay { width: 50%; }
+	section#body table#buttons td.cancel { width: 50%; }
+</style>
+
+<script>
+	var realApplNumMax = -1;
+  $(document).ready(function() {
+		$('article.application').each(function(index, item) {
+			nextApplNum = index + 2;
+		});
+		realApplNumMax = nextApplNum - 1;
+		
+		readOriginalData();
+		
+		initMenu();
+		
+		setSubMenuConfirmMode();
+	});
+	
+	function initMenu() {
+		bindMousedownEvent();
+		
+		$(window).unload(function() {
+			hideSubMenuPanel();
+		});
+	}
+	
+	var oriPttn = {};
+	var oriAppls = [];
+	function readOriginalData() {
+		oriPttn.lang_id = $('section#body article.pattern select').val();
+		oriPttn.text = $('section#body input[name=pttn_text]').val();
+		oriPttn.mean = $('section#body input[name=pttn_mean]').val();
+		
+		$('section#body article.application').each(function(index, item) {
+			var appl = {};
+			appl.id = $(item).attr('id');
+			appl.text = $(item).find('input[name=appl_text]').val();
+			appl.mean = $(item).find('input[name=appl_mean]').val();
+			oriAppls.push(appl);
+		});
+	}
+	
+	function clickDeleteApplButton(delNum) {
+		var applNode = $('section#body article.application[num="'+delNum+'"]');
+		if(delNum <= realApplNumMax) {
+			if(confirm('정말로 삭제합니까?')) {
+				var appl_id = applNode.attr('id');
+				if(appl_id < 0) {
+					alert('ID: ' + appl_id);
+					return;
+				}
+				
+				$.ajax({
+					url: getCleanUrl() + '/appl_delete',
+					type: 'POST',
+					data: { appl_id: appl_id },
+					success: function(data) {
+						realApplNumMax--;
+						deleteApplication(applNode, delNum);
+					}
+				});
+			}
+		}
+	}
+	
+	function okayPattern() {
+		if(!checkPttnAndApplsValue())
+			return;
+			
+		var language = $('section#body article.pattern select').val();
+		var pttn_text = $('section#body input[name=pttn_text]').val();
+		var pttn_mean = $('section#body input[name=pttn_mean]').val();
+		
+		var pttnModified = false;
+		if(language != oriPttn.lang_id ||
+			 pttn_text != oriPttn.text ||
+			 pttn_mean != oriPttn.mean)
+			 pttnModified = true;
+			
+		var appls_id = [], appls_text = [], appls_mean = [];
+		$('section#body article.application').each(function(index, item) {
+			var id = $(item).attr('id');
+			var text = $(item).find('input[name=appl_text]').val();
+			var mean = $(item).find('input[name=appl_mean]').val();
+			
+			for(var i in oriAppls) {
+				var oappl = oriAppls[i];
+				if(id == oappl.id) {
+					if(text != oappl.text || mean != oappl.mean) {
+						appls_id.push(id);
+						appls_text.push(text);
+						appls_mean.push(mean);			
+					}
+					break;
+				}
+			}
+		});
+		
+		if(!pttnModified && appls_id.length == 0) {
+			cancelPattern();
+			return;
+		}
+		
+		jQuery.ajaxSettings.traditional = true;
+		$.ajax({
+			url: getCleanUrl(),
+			type: 'POST',
+			data: {
+				language: language,
+				pttn_text: pttn_text,
+				pttn_mean: pttn_mean,
+				appls_id: appls_id,
+				appls_text: appls_text,
+				appls_mean: appls_mean
+			},
+			success: function(data) {
+				document.location = cutBack('modify');
+			}
+		});
+	}
+	
+	function checkPttnAndApplsValue() {
+		var textLen = $('section#body input[name=pttn_text]').val().length;
+		var meanLen = $('section#body input[name=pttn_mean]').val().length;
+		if(textLen == 0 || meanLen == 0) {
+			alert('패턴과 뜻을 모두 입력하세요.');
+			return false;
+		}
+		
+		var pass = true;
+		$('section#body article.application').each(function(index, item) {
+			var textLen = $(item).find('input[name=appl_text]').val().length;
+			var meanLen = $(item).find('input[name=appl_mean]').val().length;
+			if((textLen > 0 && meanLen == 0) || (textLen == 0 && meanLen > 0)) {
+				alert('예문과 뜻을 모두 입력하세요.');
+				pass = false;
+				return;
+			}
+		});
+		
+		return pass;
+	}
+	
+	function cancelPattern() {
+		document.location = cutBack('modify');
+	}
+</script>
+
+<article class="pattern">
+	　패턴
+	<span id="language">
+		<% if(copy) { %>
+			<select name="language" visibility="hidden">
+		<% } else { %>
+			<select name="language">
+		<% } %>
+		<% for(var i in langs) { %>
+			<% if(langs[i].code == sel_lang_code) { %>
+				<option value="<%= langs[i].code %>" selected="selected"><%= langs[i].name %></option> 
+			<% } else { %>
+				<option value="<%= langs[i].code %>"><%= langs[i].name %></option>
+			<% } %>
+		<% } %>
+		</select>
+	</span>
+	<input type="text" name="pttn_text" placeholder="패턴" maxlength="100" value="<%= pttn.text %>"/>
+	<br/>
+	<input type="text" name="pttn_mean" placeholder="뜻" maxlength="100" value="<%= pttn.mean %>"//>
+</article>
+<br/>
+<div class="applications">
+<% for(var i=0; i<appls.length; i++) { %>
+	<% var appl = appls[i]; %>
+	<article class="application" num="<%= (i+1) %>" id="<%= appl.id %>">
+		<% if(appl.quiz == 1) { %>
+			　퀴즈
+		<% } else {%>
+			　예문
+		<% } %>
+		<table class="main">
+			<tr>
+				<td class="main">
+					<% if(appl.quiz == 1) { %>
+						<input type="text" name="appl_mean" placeholder="퀴즈" maxlength="100" value="<%= appl.mean %>" display="none"/>
+						<%= appl.mean %>
+						<br/>
+						<input type="text" name="appl_text" placeholder="답" maxlength="100" value="<%= appl.text %>"/>
+					<% } else {%>
+						<input type="text" name="appl_text" placeholder="예문" maxlength="100" value="<%= appl.text %>"/>
+						<br/>
+						<input type="text" name="appl_mean" placeholder="뜻" maxlength="100" value="<%= appl.mean %>"/>
+					<% } %>
+				</td>
+				<td class="x">
+					<span class="button" onclick="clickDeleteApplButton(<%= (i+1) %>)">x</span>
+				</td>
+			</tr>
+		</table>
+	</article>
+<% } %>
+</div>
+<table id="buttons">
+	<tr>
+		<td class="okay">
+			<span id="okay" onclick="clickPatternOkayButton()">확인</span>
+		</td>
+		<td class="cancel">
+			<span id="cancel" onclick="clickPatternCancelButton()">취소</span>
+		</td>
+	</tr>
+</table>
+
+<% include ../footer.ejs %>

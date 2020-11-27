@@ -1,0 +1,83 @@
+<% include header.ejs %>
+
+<style>
+	section#body article#quiz {
+		font-size: 25px;
+		background: #ffd484;
+		border-radius: 5px;
+		padding: 3px;
+		margin: 1px;
+	}
+	
+	section#body article.answer {
+		font-size: 20px;
+		background: #ffd484;
+		border-radius: 10px;
+		padding: 2px;
+		margin: 1px;
+	}
+  section#body article.answer:nth-child(2n) { background: #ffeac4; }
+	
+	section#body article.answer > div.user {
+		color: orangered;
+		cursor: pointer;
+		font-weight: bold;
+	}
+</style>
+
+<script>
+	var login = false;
+  $(document).ready(function() {
+		login = isLogined();
+		
+		initMenu();
+  });
+	
+	function initMenu() {
+		bindMousedownEvent();
+		
+		$(window).unload(function(){
+			cancelMenu();
+		});
+	}
+	
+	function clickUserName(appl_id) {
+		var user_id = $('section#body article.answer#'+appl_id).attr('user_id');
+		
+		var oriHeaderName = setHeaderName('이동 중..'); // A
+		$.ajax({
+			url: getCleanUrl(),
+			type: 'POST',
+			data: {
+				appl_id: appl_id,
+				user_id: user_id
+			},
+			success: function(data) {
+				setHeaderName(oriHeaderName); // B
+				document.location = location.origin + '/user/'+user_id + '/lang/'+data.lang_code + '/pttn/'+data.pttn_id + '/appl/'+appl_id;
+			},
+			error: function(err) {
+				setHeaderName(oriHeaderName); // B
+			}
+		});	
+	}
+</script>
+
+<article id="quiz">
+	<%= quiz %>
+</article>
+<br/>
+<% for(var i in applUsers) { %>
+	<article class="answer" id="<%= applUsers[i].appl_id %>" user_id="<%= applUsers[i].user_id %>">
+		<div class="user" onclick="clickUserName(<%= applUsers[i].appl_id %>)">
+			　<%= applUsers[i].name %>
+		</div>
+		<div class="answer">
+			<%= applUsers[i].answer %>
+		</div>
+	</article>
+<% } %>
+<br/>
+<br id="login_hint" class="hint" value="<%= login %>"/>
+
+<% include footer.ejs %>

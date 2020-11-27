@@ -1,0 +1,316 @@
+
+<% include header.ejs %>
+
+<style>
+	section#body { text-align: center; }
+	
+	section#body table {
+		width: 300px;
+		margin: 0 auto;
+		text-align: left;
+	}
+  @media screen and (min-width: 350px) {
+		section#body table#input { width: 350px; }
+  }
+	
+	section#body table#input td.label { width: 82px; }
+	section#body table#input label {
+		width: 100px;
+		display: inline-block;
+	}
+	section#body table#input label { font-size: 20px; }
+	section#body table#input span.button {
+		width: 65px;
+		font-size: 16px;
+		text-align: center;
+		background: orange;
+		color: white;
+		display: inline-block;
+		height: 30px;
+		line-height: 30px;
+		padding: 0 1px;
+		margin-left: -3px;
+		vertical-align: top;
+	}
+	section#body table#input td input.short { width: 113px; }
+	section#body table#input td input:not(.short) { width: 98%; }
+  @media screen and (min-width: 350px) {
+		section#body table#input td input.short { width: 163px; }
+  }
+	section#body table#input td.char {
+		font-size: 12px;
+		text-align: center;
+		color: dimgray;
+	}
+	section#body table#input td#news_receive {
+		font-size: 14px;
+		text-align: center;
+	}
+	section#body table#input td#news_receive > input {
+		width: 20px;
+		margin-top: 3px;
+	}
+	
+	section#body table#buttons td { padding: 2px; }
+	section#body table#buttons td.change { width: 50%; }
+	section#body table#buttons td.cancel { width: 50%; }
+	section#body table#buttons td > span {
+		background: orange;
+		color: white;
+		display: inline-block;
+		width: 100%;
+		cursor: pointer;
+		font-size: 25px;
+		text-align: center;
+		height: 35px;
+		line-height: 35px;
+	}
+</style>
+
+<script>
+	var login = false;
+	var oriName = '';
+	var nameDuplChecked = false;
+	$(document).ready(function() {
+		login = isLogined();
+		
+		var input = $('section#body input[name=name]');
+		oriName = input.val();
+		input.keydown(function(event) {
+			nameDuplChecked = false;
+		});
+		
+		initMenu();
+	});
+	
+	function initMenu() {
+    $('nav#main_menu_panel > article#user_modify').remove();
+		
+		bindMousedownEvent();
+		
+		$(window).unload(function() {
+			hideSubMenuPanel();
+		});
+	}
+	
+	function checkNameDuplButton() {
+		var input = $('section#body input[name=name]');
+		var nameVal = input.val();
+		
+		if(nameVal == oriName) {
+			alert('이전 이름과 같습니다.');
+			return;
+		}
+		
+		if(nameVal.length < 2) {
+			alert('닉네임은 적어도 2자 이상이 되어야 합니다.');
+			return;
+		}
+		
+		var oriHeaderName = setHeaderName('체크 중..'); // A
+		$.ajax({
+			url: getCleanUrl() + '/name_dupl_check',
+			type: 'POST',
+			data: { name: nameVal },
+			success: function(data) {
+				setHeaderName(oriHeaderName); // B
+				if(data == 'success') {
+					alert('사용 가능합니다.');
+					nameDuplChecked = true;
+				} else {
+					alert('이미 존재합니다.');
+					nameDuplChecked = false;
+					input.val('');
+				}
+			},
+			error: function(err) {
+				setHeaderName(oriHeaderName); // B
+			}
+		});
+	}
+	
+	function clickChangeButton() {
+		if($('section#body input[name=password]').val().length == 0) {
+			alert('기존 비밀번호를 입력해야 합니다.');
+			return;	
+		}
+		
+		var pw1 = $('section#body input[name=new_pw]');
+		var pw2 = $('section#body input[name=confirm]');
+		if(pw1.val().length > 0) {
+			if(pw1.val() != pw2.val()) {
+				alert('비밀번호 검증에 실패했습니다.');
+				pw2.val('');
+				return;
+			} else if(pw1.val().length < 6) {
+				alert('비밀번호는 적어도 6자 이상이 되어야 합니다.');
+				return;
+			}
+			
+			var pwVal = pw1.val();
+			for(i=0; i<pwVal.length; i++) {
+				var pw_char = pwVal.charCodeAt(i);
+				if(!(pw_char >= 33 && pw_char <= 126)) {
+					alert('비밀번호는 영문/숫자/특수문자의 조합만 가능합니다.');
+					return;
+				}
+			}
+		}
+		
+		var nameVal = $('section#body input[name=name]').val();
+		if(nameVal != oriName && !nameDuplChecked) {
+			alert('닉네임 중복 확인을 해야합니다.');
+			return;
+		}
+		
+		if(nameVal.length < 2) {
+			alert('닉네임은 적어도 2자 이상이 되어야 합니다.');
+			return;
+		}
+		
+		var emailVal = $('section#body input[name=email]').val();
+		var atIndex = emailVal.indexOf('@', 0);
+		if(atIndex < 1) {
+			alert('올바른 이메일을 입력하세요.');
+			return;
+		}
+		var dotIndex = emailVal.indexOf('.', atIndex);
+		if(dotIndex <= atIndex+1) {
+			alert('올바른 이메일을 입력하세요.');
+			return;
+		}
+		if(emailVal.length <= dotIndex+1) {
+			alert('올바른 이메일을 입력하세요.');
+			return;
+		}
+		
+		for(i=0; i<emailVal.length; i++) {
+			var email_char = emailVal.charCodeAt(i);
+			if(
+				  !(
+						email_char == 46 ||
+						email_char == 64 ||
+						(email_char >= 48 && email_char <= 57) ||
+						(email_char >= 65 && email_char <= 122)
+					)
+				) {
+				alert('이메일은 영문/숫자/@/.의 조합만 가능합니다.');
+				return;
+			}
+		}
+		
+		setHeaderName('변경 중..'); // A
+		$.ajax({
+			url: getCleanUrl(),
+			type: 'POST',
+			data: $('section#body form').serialize(),
+			success: function(data) {
+				setHeaderName(''); // B
+				if(data == 'success') {
+					alert('변경에 성공했습니다.');
+					var path = $.cookie('urlBeforeUserModify'); 
+					if(path && path.length > 0)
+						document.location = location.origin + path;
+					else
+						document.location = location.origin;
+				} else {
+					alert('기존 암호가 틀렸습니다.');
+				}
+			},
+			error: function(err) {
+				setHeaderName(''); // B
+			}
+		});
+	}
+	
+	function clickCancelButton() {
+		var path = $.cookie('urlBeforeUserModify'); 
+		if(path && path.length > 0)
+			document.location = location.origin + path;
+		else
+			document.location = location.origin;
+	}
+</script>
+ 
+<br/>
+<form method="post">
+	<table id="input">
+		<tr id="id">
+			<td class="label">
+				<label>아이디</label>
+			</td>
+			<td>
+				<%= user.id %>
+			</td>
+		</tr>
+		<tr>
+			<td class="label">
+				<label>비밀번호</label>
+			</td>
+			<td>
+				<input type="password" name="password" maxlength="20"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="label">
+				<label>새비밀번호</label>
+			</td>
+			<td>
+				<input type="password" name="new_pw" maxlength="20"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="label">
+				<label>└ 확인</label>
+			</td>
+			<td>
+				<input type="password" name="confirm" maxlength="20"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="char" colspan="2">
+				비밀번호는 영문/숫자/특수문자의 조합만 가능합니다.
+			</td>
+		</tr>
+		<tr>
+			<td class="label">
+				<label>닉네임</label>
+			</td>
+			<td>
+				<input class="short" type="text" name="name" maxlength="20" value="<%= user.name %>"/>
+				<span class="button" onclick="checkNameDuplButton()">중복확인</span>
+			</td>
+		</tr>
+		<tr>
+			<td class="label">
+				<label>이메일</label>
+			</td>
+			<td>
+				<input type="email" name="email" maxlength="40" value="<%= user.email %>"/>
+			</td>
+		</tr>
+		<tr>
+			<td id="news_receive" colspan="2">
+				<% if(user.news_receive == 1) { %>
+					<input type="checkbox" name="news_receive" checked="checked"/>
+				<% } else { %>
+					<input type="checkbox" name="news_receive"/>
+				<% } %>
+				최근 소식(댓글/퀴즈 등)를 이메일로 받습니다.
+			</td>
+		</tr>
+	</table>
+	<br/>
+	<table id="buttons">
+		<tr>
+			<td class="change">
+				<span id="change" onclick="clickChangeButton()">변경</span>
+			</td>
+			<td class="cancel">
+				<span id="cancel" onclick="clickCancelButton()">취소</span>
+			</td>
+		</tr>
+	</table>
+</form>
+		
+<% include footer.ejs %>

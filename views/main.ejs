@@ -1,0 +1,97 @@
+<% include header.ejs %>
+
+<style>
+	section#body div {
+		margin: 0 auto;
+		text-align: center;
+	}
+	section#body div#memo {
+		font-size: 16px;
+		text-align: center;
+		color: dimgray;
+	}
+	section#body div.button {
+		background: orange;
+		color: white;
+		font-size: 25px;
+		width: 250px;
+		height: 40px;
+		line-height: 40px;
+	}
+	
+	section#body table#info { margin: 0 auto; }
+	section#body table#info td { font-size: 16px; }
+	section#body table#info td > a { font-size: 16px; }
+	
+	section#body div#agreement { width: 200px; }
+	section#body div#agreement span {
+		font-size: 12px;
+		color: dimgray;
+		cursor: pointer;
+	}
+</style>
+
+<script>
+	var login = false;
+  $(document).ready(function() {
+		login = isLogined();
+		
+		initMenu();
+	});
+	
+	function initMenu() {
+	  $('nav#main_menu_panel > article#main').remove();
+		
+		bindMousedownEvent();
+		
+		$(window).unload(function() {
+			hideSubMenuPanel();
+		});
+	}
+	
+	function clickUsageButton() {
+		document.location = location.origin + '/usage';
+	}
+</script>
+
+<br/>
+<div id="slogan">
+	내 예문이 친구에게 퀴즈가 되는<br/>
+	소셜 외국어 패턴 연습장, OLangNote 입니다.
+</div>
+<br/>
+<br/>
+<div class="button" onclick="clickUsageButton()">
+	사용법 보기
+</div>
+<br/><br/>
+<div id="memo">
+	같이 공부할 친구를 구하거나 문의할게 있으면 카페로 오세요~
+</div>
+<br/>
+<table id="info">
+	<tr>
+		<td>
+			카페:&nbsp;
+		</td>
+		<td>
+			<a href="http://cafe.naver.com/olangnote" target="blank">http://cafe.naver.com/olangnote</a>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			이메일:&nbsp;
+		</td>
+		<td>
+			<a href="mailto:OLangNote2@gmail.com">OLangNote2@gmail.com</a>
+		</td>
+	</tr>
+</table>
+<br/><br/>
+<div id="agreement">
+	<span onclick="location.href=location.origin+'/agreement1'">이용약관</span>
+	<span onclick="location.href=location.origin+'/agreement2'">개인정보취급방침</span>
+</div>
+<br id="login_hint" class="hint" value="<%= login %>"/>
+		
+<% include footer.ejs %>

@@ -1,0 +1,75 @@
+@media screen and (max-width: 767px) {
+	section#body input[type=text] { width: 98%; }
+}
+@media screen and (min-width: 768px) and (max-width: 959px) {
+	section#body input[type=text] { width: 99%; }
+}
+@media screen and (min-width: 960px) {
+	section#body input[type=text] { width: 99%; }
+}
+
+section#body article.pattern {
+	background: #ffd484;
+	font-size: 25px;
+	padding: 2px;
+	margin: 1px;
+}
+section#body div.applications article.application {
+	background: #ffd484;
+	padding: 2px;
+	margin: 1px;
+}
+section#body div.applications article.application:nth-child(2n+1) { background: #ffeac4; }
+
+section#body article.pattern span#language { float: right; }
+section#body article.pattern select { margin: 2px; }
+section#body article.pattern input[type=text] { font-size: 25px; }
+section#body table.main { width: 100%; }
+section#body table.main td.x { width: 30px; }
+section#body table.main td.x > span {
+	width: 25px;
+	line-height: 20px;
+	height: 20px;
+	padding-bottom: 5px;
+	background: orange;
+	color: white;
+	text-align: center;
+	display: inline-block;
+	border-radius: 5px;
+	font-weight: bold;
+}
+
+section#body div.button#add {
+	width: 200px;
+	margin: 2px auto;
+	height: 30px;
+	line-height: 30px;
+	padding: 2px;
+	background: orange;
+	color: white;
+	text-align: center;
+}
+
+section#body table#buttons {
+	width: 300px;
+	margin: 0 auto;
+}
+section#body table#buttons td { padding: 2px 5px; }
+section#body table#buttons td.okay { width: 55%; }
+section#body table#buttons td.cancel { width: 45%; }
+section#body table#buttons td > span {
+	background: orange;
+	color: white;
+	display: inline-block;
+	width: 100%;
+	cursor: pointer;
+	height: 30px;
+	line-height: 30px;
+}
+section#body table#buttons td > span#okay,
+section#body table#buttons td > span#cancel {
+	font-size: 25px;
+	text-align: center;
+	height: 35px;
+	line-height: 35px;
+}

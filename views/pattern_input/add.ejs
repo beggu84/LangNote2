@@ -1,0 +1,121 @@
+<% include base.ejs %>
+
+<style>
+	section#body article.pattern {
+		border-radius: 10px;
+		padding: 6px 4px;
+	}
+</style>
+
+<script>
+	var initApplSize = 3;
+  $(document).ready(function() {
+		for(var i=0; i<initApplSize; i++)
+			addApplication();
+		
+		initMenu();
+		
+		setSubMenuConfirmMode();
+	});
+	
+	function initMenu() {
+		bindMousedownEvent();
+		
+		$(window).unload(function() {
+			hideSubMenuPanel();
+		});
+	}
+	
+	function clickDeleteApplButton(delNum) {
+		var applNode = $('section#body article.application[num="'+delNum+'"]');
+		deleteApplication(applNode, delNum);
+	}
+	
+	function okayPattern() {
+		if(!checkPttnAndApplsValue())
+			return;
+			
+		var oriHeaderName = setHeaderName('추가 중..'); // A
+		$.ajax({
+			url: getCleanUrl(),
+			type: 'POST',
+			data: $('section#body form').serialize(),
+			success: function(data) {
+				broadcastQuizMails();
+				document.location = cutBack('add');
+			},
+			error: function(err) {
+				setHeaderName(oriHeaderName); // B
+			}
+		});
+	}
+	
+	function checkPttnAndApplsValue() {
+		var applExist = false;
+		$('section#body input[name=appl_text]').each(function(index, item) {
+			if($(item).val().length > 0)
+				applExist = true;
+		});
+		if(!applExist) {
+			alert('적어도 하나의 예문을 입력하세요.');
+			return false;
+		}
+		
+		var pass = true;
+		$('section#body article.application').each(function(index, item) {
+			var textLen = $(item).find('input[name=appl_text]').val().length;
+			var meanLen = $(item).find('input[name=appl_mean]').val().length;
+			if((textLen > 0 && meanLen == 0) || (textLen == 0 && meanLen > 0)) {
+				alert('예문과 뜻을 모두 입력하세요.');
+				pass = false;
+				return;
+			}
+		});
+		
+		return pass;
+	}
+	
+	function broadcastQuizMails() {
+		$.ajax({
+			url: getCleanUrl() + '/quiz_news_broadcast',
+			type: 'POST',
+			data: { url: location.origin },
+			success: function(data) {
+				setHeaderName(oriHeaderName); // B
+				alert('success');
+			},
+			error: function(err) {
+				setHeaderName(oriHeaderName); // B
+			}
+		});
+	}
+	
+	function cancelPattern() {
+		document.location = cutBack('add');
+	}
+</script>
+		
+<form method="post">
+	<article class="pattern">
+		<%= pttn.text %>
+		<br/>
+		<%= pttn.mean %>
+	</article>
+	<br/>
+	<div class="applications">
+	</div>
+	<div class="button" id="add" onclick="clickAddApplicationButton()"/>예문 추가</div>
+	<br/>
+	<table id="buttons">
+		<tr>
+			<td class="okay">
+				<span id="okay" onclick="clickPatternOkayButton()">확인</span>
+			</td>
+			<td class="cancel">
+				<span id="cancel" onclick="clickPatternCancelButton()">취소</span>
+			</td>
+		</tr>
+	</table>
+</form>
+
+<% include ../footer.ejs %>

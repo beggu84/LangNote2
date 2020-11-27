@@ -1,0 +1,147 @@
+<% include header.ejs %>
+
+<style>
+	@media screen and (max-width: 767px) {
+		section#body input[type=text] { width: 98%; }
+	}
+	@media screen and (min-width: 768px) and (max-width: 959px) {
+		section#body input[type=text] { width: 99%; }
+	}
+	@media screen and (min-width: 960px) {
+		section#body input[type=text] { width: 99%; }
+	}
+	
+  section#body article {
+    background: #ffd484;
+    padding: 2px;
+		margin: 1px;
+  }
+	section#body article.pattern { border-radius: 10px; }
+	section#body article.pattern > table td.main { font-size: 25px; }
+	section#body article.application { border-radius: 10px 10px 5px 5px; }
+  section#body article.application:nth-child(2n+1) { background: #ffeac4; }
+	
+	section#body table {
+		width: 100%;
+		margin: 2px 0;
+	}
+	section#body table td.v { width: 30px; }
+	section#body table td.v > div {
+		background: orange;
+		color: white;
+		width: 25px;
+		line-height: 20px;
+		height: 20px;
+		margin: 0 auto;
+		padding-bottom: 5px;
+		text-align: center;
+		border-radius: 5px;
+		font-weight: bold;
+	}
+	
+	section#body div#guide {
+		margin: 0 auto;
+		font-size: 25px;
+		text-align: center;
+		color: dimgray;
+	}
+</style>
+
+<script>
+	var login = false;
+  $(document).ready(function() {
+		login = isLogined();
+		
+		initMenu();
+	});
+	
+	function initMenu() {
+		addSubMenuItem('나가기').on('click', function() {
+			document.location = cutBack('quiz'); 
+			hideSubMenuPanel();
+		});
+		addSubMenuItem('패턴 목록').on('click', function() {
+			document.location = cutBack('pttn'); 
+			hideSubMenuPanel();
+		});
+		addSubMenuItem('언어 목록').on('click', function() {
+			document.location = cutBack('lang'); 
+			hideSubMenuPanel();
+		});
+		
+		bindMousedownEvent();
+		
+		$(window).unload(function() {
+			hideSubMenuPanel();
+		});
+	}
+	
+	function clickQuizOkayButton(appl_id) {
+		var node = $('section#body article.application#'+appl_id);
+		var answer = node.find(':text').val();
+		if(answer.length == 0) {
+			alert('답을 입력하세요.');
+			return;
+		}
+		
+		var oriHeaderName = setHeaderName('추가 중..'); // A
+		$.ajax({
+			url: getCleanUrl() + '/okay',
+			type: 'POST',
+			data: {
+				src_id: appl_id,
+				quiz: node.find('span.quiz').text(),
+				answer: answer
+			},
+			success: function(data) {
+				setHeaderName(oriHeaderName); // B
+				node.remove();
+				if($('section#body article.application').length == 0) {
+					document.location = cutBack('quiz');
+				}
+			},
+			error: function(err) {
+				setHeaderName(oriHeaderName); // B
+			}
+		});
+	}
+</script>
+
+<article class="pattern">
+	<table>
+		<tr>
+			<td class="main">
+				<%= pttn.text %>
+				<br/>
+				<%= pttn.mean %>
+			</td>
+		</tr>
+	</table>
+</article>
+<br/>
+<div class="applications">
+<% for(var i in appls) { %>
+	<% var appl = appls[i]; %>
+	<article class="application" id="<%= appl.id %>">
+		<table>
+			<tr>
+				<td class="main">
+					<span class='quiz'><%= appl.mean %></span>
+					<br/>
+					<input type="text" placeholder="answer"/>
+				</td>
+				<td class="v">
+					<div class="button" onclick="clickQuizOkayButton(<%= appl.id %>)">v</div>
+				</td>
+			</tr>
+		</table>
+	</article>
+<% } %>
+</div>
+<% if(appls.length == 0) { %>
+	<br/>
+  <div id="guide">퀴즈가 없습니다.</div>
+<% } %>
+<br id="login_hint" class="hint" value="<%= login %>"/>
+
+<% include footer.ejs %>

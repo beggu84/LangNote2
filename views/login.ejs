@@ -1,0 +1,161 @@
+<% include header.ejs %>
+
+<style>
+	section#body { text-align: center; }
+	
+	section#body table {
+		width: 300px;
+		margin: 0 auto;
+		text-align: left;
+	}
+  @media screen and (min-width: 350px) {
+		section#body table#input { width: 350px; }
+  }
+	
+	section#body table#input label {
+		width: 80px;
+		display: inline-block;
+	}
+	section#body table#input input { width: 98%; }
+	
+	section#body table#buttons td { padding: 2px; }
+	section#body table#buttons td.login { width: 50%; }
+	section#body table#buttons td.register { width: 50%; }
+	section#body table#buttons td > span {
+		background: orange;
+		color: white;
+		display: inline-block;
+		width: 100%;
+		cursor: pointer;
+		font-size: 25px;
+		text-align: center;
+		height: 35px;
+		line-height: 35px;
+	}
+	
+	section#body div#forgot {
+		margin: 0 auto;
+		font-size: 14px;
+		cursor: pointer;
+		text-align: center;
+		width: 200px;
+	}
+	
+	section#body div#hi {
+		margin: 0 auto;
+		text-align: center;
+	}
+	section#body div#button {
+		width: 200px;
+		margin: 0 auto;
+		background: orange;
+		color: white;
+		display: inline-block;
+		cursor: pointer;
+		font-size: 25px;
+		text-align: center;
+		height: 35px;
+		line-height: 35px;
+	}
+</style>
+
+<script>
+	$(document).ready(function() {
+		initMenu();
+	});
+	
+	function initMenu() {
+		bindMousedownEvent();
+		
+		$(window).unload(function() {
+			hideSubMenuPanel();
+		});
+	}
+	
+	function clickLoginButton() {
+		if($('section#body input[name=id]').val().length == 0) {
+			alert('아이디를 입력하세요.');
+			return;
+		}
+		
+		if($('section#body input[name=password]').val().length == 0) {
+			alert('비밀번호를 입력하세요.');
+			return;
+		}
+		
+		var oriHeaderName = setHeaderName('로그인 중..'); // A
+		$.ajax({
+			url: getCleanUrl(),
+			type: 'POST',
+			data: $('section#body form').serialize(),
+			success: function(data) {
+				setHeaderName(oriHeaderName); // B
+				if(data.result == 'success') {
+					document.location = data.url;
+				} else {
+					alert('아이디 혹은 비밀번호가 틀렸습니다.');
+				}
+			},
+			error: function(err) {
+				setHeaderName(oriHeaderName); // B
+			}
+		});
+	}
+	
+	function clickRegisterButton() {
+		document.location = location.origin + '/register';
+	}
+	
+	function clickForgotButton() {
+		document.location = location.origin + '/forgot';
+	}
+	
+	function clickLogoutButton() {
+		 $.ajax({
+			url: location.origin + '/logout',
+			type: 'POST',
+			success: function(data) {
+				location.reload();
+			}
+		});
+	}
+</script>
+
+<br/>
+<% if(!login) { %>
+	<form method="post">
+		<table id="input">
+			<tr>
+				<td><label>아이디</label></td>
+				<td><input type="text" name="id" maxlength="20"/></td>
+			</tr>
+			<tr>
+				<td><label>비밀번호</label></td>
+				<td><input type="password" name="password" maxlength="20"/>
+			</tr>
+		</table>
+		<br/>
+		<table id="buttons">
+			<tr>
+				<td class="login">
+					<span id="login" onclick="clickLoginButton()">로그인</span>
+				</td>
+				<td class="register">
+					<span id="register" onclick="clickRegisterButton()">회원가입</span>
+				</td>
+			</tr>
+		</table>
+	</form>
+	<br/>
+	<div id="forgot" onclick="clickForgotButton()">
+		아이디/비밀번호 찾기
+	</div>
+<% } else { %>
+	<br/>
+	<div id="hi"><%= name %>님, 반가워요 :)</div>
+	<br/>
+	<br/>
+	<div id="button" onclick="clickLogoutButton()">로그아웃</div>
+<% } %>
+		
+<% include footer.ejs %>

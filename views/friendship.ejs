@@ -1,0 +1,129 @@
+<% include header.ejs %>
+
+<style>
+	@media screen and (min-width: 350px) {
+    section#body { 
+			width: 350px;
+			margin: 0 auto;
+		}
+  }
+	
+	section#body article {
+		height: 40px;
+		padding: 2px;
+		margin: 1px;
+		background: #ffd484;
+		border-radius: 10px;
+	}
+  section#body article:nth-child(2n) { background: #ffeac4; }
+	
+	section#body article > div {
+		/*width: 310px;*/
+		height: 100%;
+		margin: 0 auto;
+		text-align: center;
+	}
+	section#body article > div > span.image {
+		height: 100%;
+		width: 200px;
+		background-image: url('/images/Handshake.png');
+		background-size: auto 90%;
+		background-repeat: no-repeat;
+		background-position: center;
+		margin: 0 -10px;
+		display: inline-block;
+		vertical-align: middle;
+	}
+	section#body article > div > span.image > table {
+		width: 125px;
+		margin: 0 auto;
+	}
+	section#body article > div > span.image > table td {
+		width: 20px;
+		font-size: 0;
+	}
+	section#body article > div > span.image > table td.me { float: left; }
+	section#body article > div > span.image > table td.you { float: right; }
+	section#body article > div > span.image > table td > img {
+		height: 19px;
+		margin-top: 3px;
+		display: inline-block;
+	}
+	section#body article > div > span.image > table td > span.count {
+		font-size: 10px;
+		color: white;
+		text-align: center;
+	}
+	section#body article > div > span.name {
+		width: 120px;
+		text-align: left;
+		display: inline-block;
+		vertical-align: middle;
+		cursor: pointer;
+		color: orangered;
+		font-weight: bold;
+	}
+	
+	section#body div#guide {
+		margin: 0 auto;
+		font-size: 25px;
+		text-align: center;
+		color: dimgray;
+	}
+</style>
+
+<script>
+  $(document).ready(function() {
+		initMenu();
+  });
+	
+	function initMenu() {
+		bindMousedownEvent();
+		
+		$('nav#main_menu_panel > article#friendship').remove();
+		
+		$(window).unload(function(){
+			hideSubMenuPanel();
+		});
+	}
+	
+	function clickUser(user_id) {
+		document.location = location.origin + '/user/'+user_id;
+	}
+</script>
+
+<% for(var i in fships) { %>
+	<article>
+		<div>
+			<span class="image">
+				<table>
+					<tr>
+						<td class="me">
+							<% if(fships[i].to_count > 0) { %>
+								<img class="me" src="/images/RipeOrange.png"/>
+								<span class="count"><%= fships[i].to_count/5 %></span>
+							<% } %>
+						</td>
+						<td></td>
+						<td class="you">
+							<% if(fships[i].from_count > 0) { %>
+								<img class="you" src="/images/RipeOrange.png"/>
+								<span class="count"><%= fships[i].from_count/5 %></span>
+							<% } %>
+						</td>
+					</tr>
+				</table>
+			</span>
+			<span class="name" onclick="<%- "clickUser(" + "'" + fships[i].user_id + "')" %>">
+				<%= fships[i].name %>
+			</span>
+		</div>
+	</article>
+<% } %>
+<br/>
+<% if(fships.length == 0) { %>
+	<br/>
+	<div id="guide">연결된 유저가 없습니다.</div>
+<% } %>
+
+<% include footer.ejs %>

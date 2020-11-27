@@ -1,0 +1,67 @@
+<% include ../header.ejs %>
+
+<link href="/stylesheets/pattern_input.css" type="text/css" rel="stylesheet">
+
+<script>
+	var nextApplNum = 1;
+	function addApplication() {
+		var applNode = '';
+		applNode += '<article class="application" num="'+nextApplNum+'" id="-1">';
+		applNode += '　예문<br/>';
+		applNode += '<table class="main">';
+		applNode += '<tr>';
+		applNode += '<td class="text">';
+		applNode += '<input type="text" name="appl_text" placeholder="예문" maxlength="100"/>';
+		applNode += '<br/>';
+		applNode += '<input type="text" name="appl_mean" placeholder="뜻" maxlength="100"/>';
+		applNode += '</td>';
+		applNode += '<td class="x">';
+		applNode += '<span class="button" onclick="clickDeleteApplButton('+nextApplNum+')">x</span>';
+		applNode += '</td>';
+		applNode += '</tr>';
+		applNode += '<table>';
+		applNode += '</article>';
+		$('div.applications').append(applNode);
+		nextApplNum++;
+	}
+	
+	function clickAddApplicationButton() {
+		addApplication();
+	}
+	
+	function deleteApplication(applNode, delNum) {
+		applNode.remove();
+		nextApplNum--;
+		
+		$('section#body div.applications > article').each(function(index, item) {
+			var currNum = $(item).attr('num');
+			var currId = $(item).attr('id');
+			if(currNum > delNum) {
+				var itemHtml = $(item).html();
+				var applText = $(item).find('input[name=appl_text]').val();
+				var applMean = $(item).find('input[name=appl_mean]').val();
+				itemHtml = itemHtml.replace('clickDeleteApplButton('+currNum, 'clickDeleteApplButton('+(currNum-1));
+				$(item).html(itemHtml).attr('num', currNum-1);
+				$(item).html(itemHtml).attr('id', currId);
+				$(item).find('input[name=appl_text]').val(applText);
+				$(item).find('input[name=appl_mean]').val(applMean);
+			}
+		});
+	}
+	
+	function clickPatternOkayButton() {
+		okayPattern();
+	}
+	
+	function clickPatternCancelButton() {
+		cancelPattern();
+	}
+	
+	function clickMenuOkayButton() {
+		okayPattern();
+	}
+	
+	function clickMenuCancelButton() {
+		cancelPattern();
+	}
+</script>

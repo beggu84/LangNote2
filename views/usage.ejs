@@ -1,0 +1,236 @@
+<% include header.ejs %>
+
+<style>
+	section#body {
+		font-size: 16px;
+		padding-left: 2px;
+		padding-right: 2px;
+	}
+	section#body a.index {
+		font-size: 16px;
+		color: royalblue;
+	}
+	section#body span.title { font-size: 25px; }
+	section#body div.image { text-align: center; }
+</style>
+
+<script>
+	var login = false;
+  $(document).ready(function() {
+		login = isLogined();
+		
+		initMenu();
+	});
+	
+	function initMenu() {
+	  $('nav#main_menu_panel > article#usage').text('맨 위로');
+		
+		bindMousedownEvent();
+		
+		$(window).unload(function() {
+			hideSubMenuPanel();
+		});
+	}
+</script>
+
+<div id="index">
+	<span class="title">- 목차 -</span>
+	<br/><a class="index" href="#menu">- 메뉴</a>
+	<br/><a class="index" href="#popup">- 팝업창</a>
+	<br/><a class="index" href="#register">- 회원 가입</a>
+	<br/><a class="index" href="#language_add">- 언어 추가</a>
+	<br/><a class="index" href="#pattern_new">- 패턴/예문 생성</a>
+	<br/><a class="index" href="#application_add">- 예문 추가</a>
+	<br/><a class="index" href="#pattern_modify">- 패턴/예문 수정</a>
+	<br/><a class="index" href="#application">- 예문 화면</a>
+	<br/><a class="index" href="#copy">- 패턴 복사</a>
+	<br/><a class="index" href="#quiz">- 퀴즈 풀기</a>
+	<br/><a class="index" href="#friendship">- 프랜드쉽</a>
+	<br/><a class="index" href="#comment">- 댓글</a>
+</div>
+
+<a class="anchor" name="menu">
+	<br/><br/>
+</a>
+<span class="title">※ 메뉴</span>
+<br/>&nbsp;좌측 상단에 'OLangNote'를 클릭하면 메인 메뉴가 나옵니다. (로그인했을 때와 안했을 때 메뉴가 다릅니다.)
+<br/>
+<div class="image">
+	<img src="http://delisure.com/OLangNote/images/usage/Interface1.jpg"/>
+	<img src="http://delisure.com/OLangNote/images/usage/Interface2.jpg"/>
+</div>
+&nbsp;우측 상단에 '≡'를 누르면 클릭하면 메뉴가 나옵니다. (로그인했을 때와 안했을 때 메뉴가 다릅니다.)
+<br/>
+<div class="image">
+	<img src="http://delisure.com/OLangNote/images/usage/Interface3.jpg"/>
+	<img src="http://delisure.com/OLangNote/images/usage/Interface4.jpg"/>
+</div>
+
+<a class="anchor" name="popup">
+	<br/><br/>
+</a>
+<span class="title">※ 팝업창</span>
+<br/>&nbsp;삭제 등의 동작을 했을 때 팝업 창이 나오는데, 크롬의 경우 팝업을 차단할지 여부를 결정하는 체크 박스가 있습니다. 체크하지 말기를 권합니다.
+<div class="image">
+	<img src="http://delisure.com/OLangNote/images/usage/Popup.jpg"/>
+</div>
+
+<a class="anchor" name="register">
+	<br/><br/>
+</a>
+<span class="title">※ 회원 가입</span>
+<br/>&nbsp;메인 메뉴에서 '로그인'을 클릭해서 로그인 화면으로 가서 '회원가입' 버튼을 클릭합니다.
+<div class="image">
+	<img src="http://delisure.com/OLangNote/images/usage/Register1.jpg"/>
+	<img src="http://delisure.com/OLangNote/images/usage/Register2.jpg"/>
+</div>
+&nbsp;약관을 잘 읽어본 후.. 부족한게 있으면 개발자에게 연락주시면 감사하겠습니다.(__)
+<br/>&nbsp;약관에 모두 동의 후 '계속'을 클릭하여 회원가입 화면을 작성하면 되는데 중요한 것은 아이디와 이메일입니다.
+<br/>&nbsp;url에 회원 아이디를 사용하기 때문에 아이디를 대충 입력하면 본인이 불편할 수도 있습니다.
+<br/>&nbsp;이메일은 비밀번호를 잊었을 때와 새로운 소식(댓글, 퀴즈 등)을 받을 때 필요하므로 대충 입력하면 본인이 불편할 수도 있습니다.
+<br/>&nbsp;모든 칸을 채우고 중복 확인을 한 후 '확인' 버튼을 클릭하면 회원 가입과 동시에 로그인됩니다.
+<div class="image">
+	<img src="http://delisure.com/OLangNote/images/usage/Register3.jpg"/>
+	<img src="http://delisure.com/OLangNote/images/usage/Register4.jpg"/>
+</div>
+
+<a class="anchor" name="language_add">
+	<br/><br/>
+</a>
+<span class="title">※ 언어 추가</span>
+<br/>&nbsp;로그인 후 메인 메뉴에서 '홈으로'를 클릭합니다.
+<div class="image">
+	<img src="http://delisure.com/OLangNote/images/usage/AddLanguage1.jpg"/>
+</div>
+&nbsp;언어를 선택 후 '언어 추가' 버튼을 클릭하면 언어가 추가됩니다.
+<div class="image">
+	<img src="http://delisure.com/OLangNote/images/usage/AddLanguage2.jpg"/>
+	<img src="http://delisure.com/OLangNote/images/usage/AddLanguage3.jpg"/>
+</div>
+
+<a class="anchor" name="pattern_new">
+	<br/><br/>
+</a>
+<span class="title">※ 패턴/예문 생성</span>
+<br/>&nbsp;서브 메뉴 버튼 옆에 '+'를 누르면 어디서든 패턴/예문을 등록할 수 있습니다. (그전에 적어도 하나의 언어를 추가해야 합니다.)
+<div class="image">
+	<img src="http://delisure.com/OLangNote/images/usage/NewPattern1.jpg"/>
+</div>
+&nbsp;언어 선택, 패턴과 예문을 적고, '확인' 버튼을 클릭하면 '영어'에 패턴(오렌지)가 하나 생긴 것을 것을 볼 수 있습니다. 
+<div class="image">
+	<img src="http://delisure.com/OLangNote/images/usage/NewPattern2.jpg"/>
+	<img src="http://delisure.com/OLangNote/images/usage/NewPattern3.jpg"/>
+</div>
+&nbsp;'영어'를 눌러보면 등록한 패턴 목록을 볼 수 있고, 해당 패턴을 누르면 패턴+예문 화면을 볼 수 있습니다.
+<br/>&nbsp;패턴 한 개당 예문을 5개 이상 등록하면 잘 익은 오렌지가 됩니다. 패턴 목록에 보이는 오렌지 이미지 아래 20%라는 것은 예문이 1개가 등록되었다는 것입니다. 예문을 더 등록해서 패턴을 자기 것으로 만드는 '결실'을 맺길 바랍니다^^
+<div class="image">
+	<img src="http://delisure.com/OLangNote/images/usage/NewPattern4.jpg"/>
+	<img src="http://delisure.com/OLangNote/images/usage/NewPattern5.jpg"/>
+</div>
+
+<a class="anchor" name="application_add">
+	<br/><br/>
+</a>
+<span class="title">※ 예문 추가</span>
+<br/>&nbsp;패턴+예문 화면의 서브 메뉴에서 '예문 추가'를 클릭하면 예문만 추가할 수 있습니다.
+<div class="image">
+	<img src="http://delisure.com/OLangNote/images/usage/NewPattern5.jpg"/>
+	<img src="http://delisure.com/OLangNote/images/usage/NewPattern6.jpg"/>
+	<img src="http://delisure.com/OLangNote/images/usage/NewPattern7.jpg"/>
+</div>
+
+<a class="anchor" name="pattern_modify">
+	<br/><br/>
+</a>
+<span class="title">※ 패턴/예문 수정</span>
+<br/>&nbsp;패턴+예문 화면의 서브 메뉴에서 '수정'를 클릭하면 패턴/예문을 수정할 수 있습니다.
+<div class="image">
+	<img src="http://delisure.com/OLangNote/images/usage/Modify1.jpg"/>
+	<img src="http://delisure.com/OLangNote/images/usage/Modify2.jpg"/>
+</div>
+
+<a class="anchor" name="application">
+	<br/><br/>
+</a>
+<span class="title">※ 예문 화면</span>
+<br/>&nbsp;패턴+예문 화면에서 예문을 클릭하면 예문만 따로 볼 수 있으며 서브 메뉴를 사용해서 해당 예문만 별도로 수정할 수 있습니다.
+<div class="image">
+	<img src="http://delisure.com/OLangNote/images/usage/Application1.jpg"/>
+	<img src="http://delisure.com/OLangNote/images/usage/Application2.jpg"/>
+</div>
+
+<a class="anchor" name="copy">
+	<br/><br/>
+</a>
+<span class="title">※ 패턴 복사</span>
+<br/>&nbsp;다른 사람의 페이지에 방문해서 패턴+예문 화면의 서브 메뉴에서 '복사'를 클릭하면 패턴이 복사되며 해당 패턴과 연결된 상태가 됩니다.
+<div class="image">
+	<img src="http://delisure.com/OLangNote/images/usage/Copy1.jpg"/>
+	<img src="http://delisure.com/OLangNote/images/usage/Copy2.jpg"/>
+</div>
+&nbsp;다른 사람의 페이지에서, 자신이 이미 복사해서 연결된 패턴은 숫자 없이 'Q'로 표시 됩니다.
+<div class="image">
+	<img src="http://delisure.com/OLangNote/images/usage/Copy3.jpg"/>
+	<img src="http://delisure.com/OLangNote/images/usage/Copy4.jpg"/>
+</div>
+
+<a class="anchor" name="quiz">
+	<br/><br/>
+</a>
+<span class="title">※ 퀴즈 풀기</span>
+<br/>&nbsp;복사한 패턴에 연결된 사용자들이 등록한 예문이 있으면 그 예문들이 자신에게는 퀴즈로 보여집니다. 반대로 자신이 등록한 예문은 패턴에 연결된 다른 사용자들에게는 퀴즈로 보이게 됩니다.
+<br/>&nbsp;'Q' 버튼 옆에 숫자가 퀴즈의 개수입니다. 'Q' 버튼을 클릭하여 퀴즈 화면에서 맘에 드는 퀴즈에 답변을 작성하고 'V' 버튼을 클릭하여 자신의 예문으로 등록합니다.
+<br/>&nbsp;퀴즈가 1개 밖에 없었으면 저절로 패턴+예문으로 돌아가고, 그렇지 않으면 서브 메뉴에서 '나가기'를 클릭해서 돌아가면 됩니다.
+<div class="image">
+	<img src="http://delisure.com/OLangNote/images/usage/Quiz1.jpg"/>
+	<img src="http://delisure.com/OLangNote/images/usage/Quiz2.jpg"/>
+	<img src="http://delisure.com/OLangNote/images/usage/Quiz3.jpg"/>
+</div>
+&nbsp;새로 등록된 예문을 보면 일반 예문과는 다르게 질문-답변의 형태입니다.
+<br/>&nbsp;질문 위에 퀴즈(예문)를 최초 등록한 사람이 링크 걸려져 있어서 클릭하면 그 사람의 최초 예문을 확인할 수 있습니다.
+<div class="image">
+	<img src="http://delisure.com/OLangNote/images/usage/Quiz4.jpg"/>
+	<img src="http://delisure.com/OLangNote/images/usage/Quiz5.jpg"/>
+</div>
+&nbsp;최초 작성자 닉네임 옆에 '모두의 답'을 클릭하면 최초 작성자를 포함해서 퀴즈를 푼 모든 사용자들이 작성한 답을 볼 수 있습니다.
+<div class="image">
+	<img src="http://delisure.com/OLangNote/images/usage/Quiz6.jpg"/>
+	<img src="http://delisure.com/OLangNote/images/usage/Quiz7.jpg"/>
+</div>
+&nbsp;패턴 목록에서도 패턴이 연결되었는지 그리고 예문으로 등록할 수 있는 퀴즈가 몇 개 남아 있는지를 볼 수 있습니다. (다른 사람의 페이지에 방문했을 때 연결됨을 표시하는 것과는 조금 다른 의미입니다.)
+<div class="image">
+	<img src="http://delisure.com/OLangNote/images/usage/Quiz8.jpg"/>
+</div>
+
+<a class="anchor" name="friendship">
+	<br/><br/>
+</a>
+<span class="title">※ 프랜드쉽</span>
+<br/>&nbsp;자신이 예문을 작성해서 생성된 퀴즈를 다른 사람이 풀거나, 다른 사람이 예문을 작성해서 생성된 퀴즈를 자신이 풀면 서로에게 기여하게 됩니다.
+<br/>&nbsp;메인 메뉴에서 프랜드쉽을 클릭하면 서로 얼마나 기여했는지를 오렌지 단위의 수치로 볼 수 있습니다.
+<br/>&nbsp;패턴 한 개 당 5개의 예문을 등록하면 잘 익은 오렌지가 되기 때문에, 0.8은 예문(퀴즈) 4개를, 0.2는 1개를 기여했다라는 의미가 됩니다.
+<br/>&nbsp;왼쪽이 자신이 상대에게 기여한 정도, 오른쪽이 상대방이 자신에게 기여한 정도입니다.
+<div class="image">
+	<img src="http://delisure.com/OLangNote/images/usage/Friendship1.jpg"/>
+	<img src="http://delisure.com/OLangNote/images/usage/Friendship2.jpg"/>
+</div>
+
+<a class="anchor" name="comment">
+	<br/><br/>
+</a>
+<span class="title">※ 댓글</span>
+<br/>&nbsp;모든 패턴과 예문에는 댓글을 작성할 수 있습니다. 메모 혹은 첨삭의 용도로 사용할 수 있습니다.
+<br/>&nbsp;댓글을 작성한 후 '추가' 버튼을 클릭하세요.
+<div class="image">
+	<img src="http://delisure.com/OLangNote/images/usage/Comment1.jpg"/>
+	<img src="http://delisure.com/OLangNote/images/usage/Comment2.jpg"/>
+</div>
+&nbsp;예문에 등록한 댓글은 패턴+예문 화면에서는 오른쪽에 연필 이미지와 카운트로 표시됩니다.
+<div class="image">
+	<img src="http://delisure.com/OLangNote/images/usage/Comment3.jpg"/>
+	<img src="http://delisure.com/OLangNote/images/usage/Comment4.jpg"/>
+</div>
+
+<br id="login_hint" class="hint" value="<%= login %>"/>
+
+<% include footer.ejs %>

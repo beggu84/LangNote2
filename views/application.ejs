@@ -1,0 +1,218 @@
+<% include comment.ejs %>
+
+<style>
+  section#body article {
+    background: #ffd484;
+    padding: 2px;
+		margin: 1px;
+		border-radius: 10px 10px 5px 5px;
+  }
+	
+	section#body table#main {
+		width: 100%;
+		margin: 2px 0;
+	}
+	section#body table#main td#main > div.source >  span.answer {
+		color: orangered;
+		font-weight: bold;
+		cursor: pointer;
+	}
+</style>
+
+<script>
+	var auth = false;
+	var login = false;
+  $(document).ready(function() {
+		auth = isAuthorized();
+		login = isLogined();
+		
+		var countNode = getCommentCountNode();
+		var count = parseInt(countNode.text());
+		if(count > 0)
+			$(countNode).css('display', 'inline-block');
+		
+		bindTextareaEvent();
+		
+		initMenu();
+	});
+	
+	function bindTextareaEvent() {
+		getCommentTextarea().on({
+			focus: function(event) {
+				$(this).attr('rows', 3);
+			},
+			blur: function(event) {
+				if($(this).val().length == 0)
+				$(this).attr('rows', 1);
+			}
+		});
+	}
+	
+	function initMenu() {
+		if(auth) {
+			addSubMenuItem('수정').on('click', function() {
+				document.location = getCleanUrl() + '/modify'; 
+				hideSubMenuPanel();
+			});
+			addSubMenuItem('삭제').on('click', clickMenuDeleteButton);
+		}
+		
+		addSubMenuItem('예문 목록').on('click', function() {
+			document.location = cutBack('appl'); 
+			hideSubMenuPanel();
+		});
+		addSubMenuItem('패턴 목록').on('click', function() {
+			document.location = cutBack('pttn'); 
+			hideSubMenuPanel();
+		});
+		addSubMenuItem('언어 목록').on('click', function() {
+			document.location = cutBack('lang'); 
+			hideSubMenuPanel();
+		});
+		
+		bindMousedownEvent();
+		
+		$(window).unload(function() {
+			hideSubMenuPanel();
+		});
+	}
+	
+	function getArticleNode(tag) {
+		return $('section#body article.application').find(tag);
+	}
+	
+	function getCommentCountNode() {
+		return getArticleNode('> table.info td.comment > span.count');
+	}
+	
+	function getCommentBodyNode(tag) {
+		return $('section#body div.comment_body').find(tag);
+	}
+	
+	function getCommentTextarea() {
+		return getCommentBodyNode('textarea');
+	}
+	
+	function getCommentsDiv() {
+		return getCommentBodyNode('> div.comments');
+	}
+	
+	function getComment(cmnt_id) {
+		return getCommentsDiv().find('> table.comment#'+cmnt_id);
+	}
+	
+	function clickSourceUserName() {
+		var node = getArticleNode('div.source');
+		var user_id = node.attr('src_user_id');
+		var lang_code = getLanguage();
+		var pttn_id = node.attr('src_pttn_id');
+		var src_id = node.attr('src_id');
+		document.location = location.origin + '/user/'+user_id + '/lang/'+lang_code + '/pttn/'+pttn_id + '/appl/'+src_id;
+	}
+	
+	function clickAllAnswers(src_appl_id) {
+		document.location = location.origin + '/all_answers/'+src_appl_id;
+	}
+	
+	function clickCommentButton() {
+		$.cookie('urlBeforeLogin', getCleanPath(), { path: '/' });
+		document.location = location.origin + '/login';
+	}
+	
+	function clickMenuDeleteButton() {
+		hideSubMenuPanel();
+		
+		if(confirm('정말로 삭제합니까?')) {
+			var oriHeaderName = setHeaderName('삭제 중..'); // A
+			$.ajax({
+				url: getCleanUrl() + '/delete',
+				type: 'POST',
+				success: function(data) {
+					setHeaderName(oriHeaderName); // B
+					document.location = cutBack('appl');
+				},
+				error: function(err) {
+					setHeaderName(oriHeaderName); // B
+				}
+			});	
+		}
+	}
+</script>
+
+<article class="application">
+	<table id="main">
+		<tr>
+			<td id="main">
+				<% if(appl.src_exist) { %>
+					<div class="source" src_id="<%= appl.src_id %>" src_user_id="<%= appl.src_user_id %>" src_pttn_id="<%= appl.src_pttn_id %>">
+						┌ 
+						<span class="answer" onclick="clickSourceUserName()">
+							<%= appl.src_user_name %>(답)
+						</span>
+						&nbsp;&nbsp;&nbsp;&nbsp;
+						<span class="answer" onclick="clickAllAnswers(<%= appl.src_id %>)">
+							모두의 답
+						</span>
+					</div>
+				<% } %>
+				<% if(appl.quiz == 1) { %>
+					Q: <%= appl.mean %>
+					<br/>
+					A: <%= appl.text %>
+				<% } else { %>
+					<%= appl.text %>
+					<br/>
+					<%= appl.mean %>
+				<% } %>
+			</td>
+		</tr>
+	</table>
+	<table class="info">
+		<tr>
+			<td class="dummy">&nbsp;&nbsp;</td>
+			<% if(login) { %>
+				<td class="comment">
+			<% } else { %>
+				<td class="comment" onclick="clickCommentButton()">
+			<% } %>
+				<img src="/images/Comment_White.png"/>
+				<span class="count"><%= appl.comments.length %></span>
+			</td>
+		</tr>
+	</table>
+</article>
+<div class="comment_body">
+	<% if(login) { %>
+		<table class="input">
+			<tr>
+				<td class="textarea">
+					<textarea placeholder="댓글/첨삭" rows="1" maxlength="500"></textarea>
+				</td>
+				<td class="add">
+					<span class="button" onclick="clickAddCommentButton()">추가</span>
+				</td>
+			</tr>
+		</table>
+	<% } %>
+	<div class="comments">
+	<% for(var i in appl.comments) { %>
+		<table class="comment" id="<%= appl.comments[i].cmnt_id %>">
+			<tr>
+				<td class="contents">
+					<span class="name" onclick="<%- "clickCommentWriter(" + "'" + appl.comments[i].writer_id + "')" %>"><%= appl.comments[i].name %>:</span>
+					<span class="text"><%= appl.comments[i].text %></span>
+				</td>
+				<% if(auth || appl.comments[i].writer_id == id) { %>
+					<td class="x">
+							<span class="button" onclick="clickDeleteCommentButton(<%= appl.comments[i].cmnt_id %>)">x</span>
+					</td>
+				<% } %>
+			</tr>
+		</table>
+	<% } %>
+	</div>
+</div>
+<br id="auth_hint" class="hint" value="<%= auth %>"/>
+<br id="login_hint" class="hint" value="<%= login %>"/>
+
+<% include footer.ejs %>

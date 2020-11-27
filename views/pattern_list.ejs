@@ -1,0 +1,227 @@
+<% include header.ejs %>
+
+<style>
+  section#body article {
+    background: #ffd484;
+    padding: 2px;
+    margin: 1px;
+		border-radius: 10px;
+  }
+  section#body article:nth-child(2n) { background: #ffeac4; }
+	
+  section#body article table { width: 100%; }
+  section#body article td.checkbox {
+		width: 20px;
+		display: none;
+	}
+  section#body article td.checkbox > input { margin: 5px; }
+  section#body article td.main {
+    /*word-break: break-all;*/
+    cursor: pointer;
+  }
+  section#body article td.count {
+		width: 1px;
+		font-size: 10px; /* important */
+		text-align: center;
+		color: dimgray;
+		vertical-align: middle;
+	}
+	section#body article td.count#quiz { display: none; }
+  section#body article td.count > img {
+		height: 25px;
+		margin: 0 2px;
+	}
+	section#body article td.count > span { font-size: 10px; }
+	
+	section#body div#guide {
+		margin: 0 auto;
+		font-size: 25px;
+		text-align: center;
+		color: dimgray;
+	}
+</style>
+
+<script>
+	var auth = false;
+	var login = false;
+  $(document).ready(function() {
+		auth = isAuthorized();
+		login = isLogined();
+		
+		if(login) {
+			if(auth)
+				loadQuizCount();
+			else
+				checkLinking();
+		}
+		
+		initMenu();
+  });
+	
+	function loadQuizCount() {
+		var pttns_id = [];
+		$('section#body article').each(function(index, item) {
+			pttns_id.push($(item).attr('id'));
+		});
+		
+		if(pttns_id.length > 0) {
+			jQuery.ajaxSettings.traditional = true;
+			$.ajax({
+				url: getCleanUrl() + '/quiz_count_load',
+				type: 'POST',
+				data: { pttns_id: pttns_id },
+				success: function(data) {
+					data.forEach(function(pttn, index) {
+						if(pttn.copied) {
+							$('section#body article#'+pttn.id).find('td#quiz').css('display','table-cell');
+							$('section#body article#'+pttn.id).find('td#quiz > span').text(pttn.quiz_count);
+						}
+					});
+				}
+			});
+		}
+	}
+	
+	function checkLinking() {
+		var pttns_id = [];
+		$('section#body article').each(function(index, item) {
+			pttns_id.push($(item).attr('id'));
+		});
+		
+		if(pttns_id.length > 0) {
+			jQuery.ajaxSettings.traditional = true;
+			$.ajax({
+				url: getCleanUrl() + '/linking_check',
+				type: 'POST',
+				data: { pttns_id: pttns_id },
+				success: function(data) {
+					data.forEach(function(pttn, index) {
+						if(pttn.linking)
+							$('section#body article#'+pttn.id).find('td#quiz').css('display','table-cell');
+					});
+				}
+			});
+		}
+	}
+	
+	function initMenu() {
+		if(auth) {
+			addSubMenuItem('삭제').on('click', function() {
+				setSubMenuConfirmMode();
+				$('nav#right_menu_nav > span#okay').attr('onclick', 'clickMenuOkayButton("delete")');
+        $('section#body article td.checkbox').css('display', 'table-cell');
+			});
+		}
+		
+		addSubMenuItem('언어 목록').on('click', function() {
+			document.location = cutBack('lang'); 
+			hideSubMenuPanel();
+		});
+		
+		bindMousedownEvent();
+		
+		$(window).unload(function(){
+			cancelMenu();
+		});
+	}
+  
+  function clickPattern(id) {
+		if(isSubMenuMenuMode()) {
+			var checkbox = $('section#body article :checkbox#'+id);
+			if(checkbox.prop('checked'))
+				checkbox.prop('checked', false);
+			else
+			  checkbox.prop('checked', true);
+			return;
+		}
+    
+    document.location = getCleanUrl() + '/pttn/'+ id; 
+  }
+  
+  function clickMenuOkayButton(id) {
+		if(id == 'delete') {
+			var checkedBoxes = $('section#body article :checked');
+			if(checkedBoxes.length > 0) {
+				if(confirm('정말로 삭제합니까?')) {
+					var pttns_id = [];
+					checkedBoxes.each(function(index, item) {
+						pttns_id.push($(item).attr('id'));
+					});
+					
+					var oriHeaderName = setHeaderName('삭제 중..'); // A
+					jQuery.ajaxSettings.traditional = true;
+					$.ajax({
+						url: getCleanUrl() + '/pttn_delete',
+						type: 'POST',
+						data: { pttns_id: pttns_id },
+						success: function(data) {
+							setHeaderName(oriHeaderName); // B
+							/*
+							pttns_id.forEach(function(item) {
+								$('section#body article#'+item).remove();
+							});
+							*/
+							location.reload();
+						},
+						error: function(err) {
+							setHeaderName(oriHeaderName); // B
+						}
+					});
+				}
+			}
+			
+			cancelMenu(); // for cancel
+		}
+  }
+  
+  function clickMenuCancelButton() {
+    cancelMenu();
+  }
+  
+  function cancelMenu() {
+		setSubMenuMenuMode();
+    $('section#body article td.checkbox').css('display', 'none');
+  }
+</script>
+
+<% for(var i=0; i<pttns.length; i++) { %>
+  <article class="pattern" id="<%= pttns[i].id %>">
+    <table>
+      <tr>
+        <td class="checkbox">
+          <input type="checkbox" id="<%= pttns[i].id %>"/>
+        </td>
+        <td class="main" onclick="clickPattern(<%= pttns[i].id %>)">
+					<%= pttns[i].text %>
+					<br/>
+					<%= pttns[i].mean %>
+				</td>
+        <td class="count" id="appl">
+					<% if(pttns[i].appl_count >= 5) { %>
+						<img class="orange" src="/images/RipeOrange.png"/>
+					<% } else { %>
+						<img class="orange" src="/images/UnripeOrange.png"/>
+					<% } %>
+					<span><%= pttns[i].appl_count/5*100 %>%</span>
+				</td>
+				<td class="count" id="quiz">
+					<img class="quiz" src="/images/Quiz.png"/>
+					<span></span>
+				</td>
+      </tr>
+    </table>
+  </article>
+<% } %>
+<br/>
+<% if(pttns.length == 0) { %>
+	<br/>
+	<% if(auth) { %>
+		<div id="guide">패턴을 추가하세요 → ＋</div>
+	<% } else { %>
+	  <div id="guide">패턴이 없습니다.</div>
+	<% } %>
+<% } %>
+<br id="auth_hint" class="hint" value="<%= auth %>"/>
+<br id="login_hint" class="hint" value="<%= login %>"/>
+
+<% include footer.ejs %>

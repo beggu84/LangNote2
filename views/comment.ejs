@@ -1,0 +1,194 @@
+<% include header.ejs %>
+
+<style>
+	@media screen and (max-width: 767px) {
+		section#body div.comment_body table.input textarea { width: 98%; }
+	}
+	@media screen and (min-width: 768px) and (max-width: 959px) {
+		section#body div.comment_body table.input textarea { width: 98%; }
+	}
+	@media screen and (min-width: 960px) {
+		section#body div.comment_body table.input textarea { width: 99%; }
+	}
+	
+	section#body table.info { width: 100%; }
+	section#body table.info td { float: left; }
+	section#body table.info td:not(.dummy) {
+		background: orange;
+		border-radius: 5px;
+		padding: 0 3px 2px 3px;
+	}
+	section#body table.info td > img {
+		height: 20px;
+		vertical-align: middle;
+		margin-bottom: 2px;
+	}
+	section#body table.info td > span.count {
+		font-size: 16px;
+		color: white;
+		margin-left: -3px;
+		/*display: inline-block;*/
+		display: none;
+	}
+	section#body table.info td.comment { cursor: pointer; }
+	
+	section#body div.comment_body {
+		background: #ffeac4;
+		margin-top: 7px;
+	}
+	section#body div.comment_body table.input { width: 100%; }
+	section#body div.comment_body table.input textarea {
+		font-size: 16px;
+		vertical-align: middle;
+		resize: none;
+		margin-bottom: 3px;
+	}
+	section#body div.comment_body table.input td.add { width: 40px; }
+	section#body div.comment_body table.input td.add > span.button {
+		background: orange;
+		color: white;
+		text-align: center;
+		display: inline-block;
+		font-size: 16px;
+		border-radius: 5px;
+		padding: 1px 2px;
+		vertical-align: top;
+	}
+	
+	section#body div.comment_body table.comment {
+		width: 100%;
+		margin-top: -5px;
+	}
+	section#body div.comment_body table.comment tr { line-height: 16px; }
+	section#body div.comment_body table.comment td.contents {
+		width: 100%;
+		background: white;
+		border-radius: 5px;
+		border: solid darkgray 1px;
+		height: 20px;
+		line-height: 20px;
+	}
+	section#body div.comment_body table.comment td.contents > span {
+		font-size: 14px;
+		word-break: break-all;
+		padding: 0 1px;
+	}
+	section#body div.comment_body table.comment td.contents > span.name {
+		color: orangered;
+		font-weight: bold;
+		cursor: pointer;
+	}
+	section#body div.comment_body table.comment td.contents > span.text { color: dimgray; }
+	section#body div.comment_body table.comment td.x { width: 25px; }
+	section#body div.comment_body table.comment td.x > span.button {
+		font-size: 18px;
+		width: 20px;
+		height: 16px;
+		line-height: 16px;
+		padding-bottom: 4px;
+		background: orange;
+		color: white;
+		text-align: center;
+		display: inline-block;
+		border-radius: 5px;
+		font-weight: bold;
+	}
+</style>
+
+<script>
+	function clickAddCommentButton() {
+		var textarea = getCommentTextarea();
+		var textVal = textarea.val();
+		if(textVal.length == 0) {
+			alert('댓글을 입력하세요.');
+			return;
+		}
+		
+		var oriHeaderName = setHeaderName('등록 중..'); // A
+		$.ajax({
+			url: getCleanUrl() + '/comment_add',
+			type: 'POST',
+			data: { comment: textVal },
+			success: function(data) {
+				setHeaderName(oriHeaderName); // B
+				var parentNode = getCommentsDiv();
+				var delFunc = 'onclick="clickDeleteCommentButton('+data.cmnt_id+')"';
+				var countNode = getCommentCountNode();
+				updateCommentAfterAdd(textarea, parentNode, data, textVal, delFunc, countNode);
+				broadcastCommentMails(textVal);
+			},
+			error: function(err) {
+				setHeaderName(oriHeaderName); // B
+			}
+		});
+	}
+	
+	function updateCommentAfterAdd(textarea, parentNode, data, text, delFunc, countNode) {
+		textarea.val('');
+		textarea.attr('rows', 1);
+		
+		var table = '';
+		table += '<table class="comment" id="'+data.cmnt_id+'">';
+		table += '<tr>';
+		table += '<td class="contents">';
+		table += '<span class="name" onclick="clickCommentWriter(\''+data.writer_id+'\')">'+data.name+':</span>';
+		table += '<span class="text"> '+text+'</span>'; // add temp space.. why?!
+		table += '</td>';
+		table += '<td class="x">';
+		table += '<span class="button" '+delFunc+'>x</span>';
+		table += '</td>';
+		table += '</tr>';
+		table += '</table>';
+		parentNode.append(table);
+		
+		var count = parseInt(countNode.text());
+		countNode.text(count+1);
+		if(count == 0)
+			countNode.css('display', 'inline-block');
+	}
+	
+	function broadcastCommentMails(comment) {
+		$.ajax({
+			url: getCleanUrl() + '/comment_news_broadcast',
+			type: 'POST',
+			data: {
+				comment: comment,
+				url: location.origin
+			}
+		});
+	}
+	
+	function clickDeleteCommentButton(cmnt_id) {
+		if(confirm('정말로 삭제합니까?')) {
+			var oriHeaderName = setHeaderName('등록 중..'); // A
+			$.ajax({
+				url: getCleanUrl() + '/comment_delete',
+				type: 'POST',
+				data: { cmnt_id: cmnt_id },
+				success: function(data) {
+					setHeaderName(oriHeaderName); // B
+					var commentNode = getComment(cmnt_id);
+					var countNode = getCommentCountNode();
+					updateCommentAfterDelete(commentNode, countNode);
+				},
+				error: function(err) {
+					setHeaderName(oriHeaderName); // B
+				}
+			});
+		}
+	}
+	
+	function updateCommentAfterDelete(commentNode, countNode) {
+		commentNode.remove();
+		
+		var count = parseInt(countNode.text());
+		count--;
+		countNode.text(count);
+		if(count == 0)
+			countNode.css('display', 'none');
+	}
+	
+	function clickCommentWriter(writer_id) {
+		document.location = location.origin + '/user/'+writer_id;
+	}
+</script>
